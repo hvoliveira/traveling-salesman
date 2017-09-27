@@ -11,7 +11,7 @@ public class Tour extends Chromosome {
     static List<City> cities;
 
     public Tour() {
-        this.fitness = 0;
+        this.fitness = -1;
         this.tour = new LinkedList<>();
     }
 
@@ -28,8 +28,8 @@ public class Tour extends Chromosome {
 
     @Override
     public double getFitness() {
-        if (fitness == 0) {
-            fitness = 1 / (double) getTourDistance();
+        if (fitness == -1) {
+            fitness = 1000000/getTourDistance();
         }
         return fitness;
     }
@@ -63,41 +63,45 @@ public class Tour extends Chromosome {
 
     @Override
     public List<Tour> crossover(Chromosome other) {
-        Tour child1 = new Tour();
-        Tour child2 = new Tour();
-        Tour parent = (Tour) other;
-        int pos1 = (int) (tour.size() * Math.random());
-        int pos2 = (int) (tour.size() * Math.random());
-        while(pos1 == pos2)
-            pos2 = (int) (tour.size() * Math.random());
+        Tour child = new Tour();
         for (int i = 0; i < tour.size(); i++) {
-            if(pos1 < pos2) {
-                if(i <= pos1) {
-                    child1.getTour().add(tour.get(i));
-                    child2.getTour().add(parent.getTour().get(i));
-                } else if (i > pos1 && i <= pos2) {
-                    child2.getTour().add(tour.get(i));
-                    child1.getTour().add(parent.getTour().get(i));
-                } else {
-                    child1.getTour().add(tour.get(i));
-                    child2.getTour().add(parent.getTour().get(i));
+            child.tour.add(null);
+        }
+        Tour parent = (Tour) other;
+
+        // Get start and end sub tour positions for parent1's tour
+        int startPos = (int) (Math.random() * parent.tour.size());
+        int endPos = (int) (Math.random() * parent.tour.size());
+
+        // Loop and add the sub tour from parent1 to our child
+        for (int i = 0; i < tour.size(); i++) {
+            // If our start position is less than the end position
+            if (startPos < endPos && i > startPos && i < endPos) {
+                child.tour.set(i, parent.tour.get(i));
+            } // If our start position is larger
+            else if (startPos > endPos) {
+                if (!(i < startPos && i > endPos)) {
+                    child.tour.set(i, parent.tour.get(i));
                 }
-            } else {
-                if(i <= pos2) {
-                    child1.getTour().add(tour.get(i));
-                    child2.getTour().add(parent.getTour().get(i));
-                } else if (i > pos2 && i <= pos1) {
-                    child2.getTour().add(tour.get(i));
-                    child1.getTour().add(parent.getTour().get(i));
-                } else {
-                    child1.getTour().add(tour.get(i));
-                    child2.getTour().add(parent.getTour().get(i));
+            }
+        }
+
+        // Loop through parent2's city tour
+        for (int i = 0; i < tour.size(); i++) {
+            // If child doesn't have the city add it
+            if (!child.tour.contains(tour.get(i))) {
+                // Loop to find a spare position in the child's tour
+                for (int j = 0; j < child.tour.size(); j++) {
+                    // Spare position found, add city
+                    if (child.tour.get(j) == null) {
+                        child.tour.set(j, tour.get(i));
+                        break;
+                    }
                 }
-            }         
+            }
         }
         List<Tour> children = new ArrayList<>();
-        children.add(child1);
-        children.add(child2);
+        children.add(child);
         return children;
     }
 
@@ -130,6 +134,8 @@ public class Tour extends Chromosome {
         String geneString = "|";
         for (int i = 0; i < tour.size(); i++) {
             geneString += tour.get(i)+"|";
+            if(i == tour.size()/2)
+               geneString += "\n";
         }
         return geneString;
     }

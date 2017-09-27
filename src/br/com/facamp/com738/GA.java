@@ -2,12 +2,17 @@ package br.com.facamp.com738;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.ui.RefineryUtilities;
 
 public class GA {
 
     private static final double mutationRate = 0.015;
     private static final int tournamentSize = 5;
     private static int elitismOffset = 1;
+    
+    private static XYSeries graphDataset = new XYSeries("Tour distance", false);
 
     public static double getMutationRate() {
         return mutationRate;
@@ -62,14 +67,16 @@ public class GA {
         Tour.addCity(city19);
         City city20 = new City(160, 20);
         Tour.addCity(city20);
-        Population pop = new Population(50, true);
+        Population pop = new Population(100, true);
         Tour fittest = (Tour) pop.getFittest();
         System.out.println("Initial distance: " + fittest.getTourDistance());
-
-        // Evolve population for 100 generations
+        // Evolve population for n generations
         pop.evolve();
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < 200; i++) {
             pop.evolve();
+            Tour t = (Tour) pop.getFittest();
+            graphDataset.add(i, t.getTourDistance());
+        }
 
         // Print final results
         System.out.println("Finished");
@@ -77,7 +84,21 @@ public class GA {
         System.out.println("Final distance: " + fittest.getTourDistance());
         System.out.println("Solution:");
         System.out.println(pop.getFittest());
+        
+        displayGraph();
 
+    }
+    
+    public static void displayGraph() {
+        XYSeriesCollection dataset = new XYSeriesCollection();
+        dataset.addSeries(graphDataset);
+        LineChart chart = new LineChart(
+                "Fitness evolution",
+                "Fitness evolution", dataset);
+
+        chart.pack();
+        RefineryUtilities.centerFrameOnScreen(chart);
+        chart.setVisible(true);
     }
 
 }
